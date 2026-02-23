@@ -37,8 +37,12 @@ openai:
 
 rate-limit:
   chat:
-    limit: 5
-    window-seconds: 60
+    minute:
+      limit: 5
+    hour:
+      limit: 30
+    daily:
+      limit: 100
 
 security:
   api-key-secret: ${API_KEY_SECRET}

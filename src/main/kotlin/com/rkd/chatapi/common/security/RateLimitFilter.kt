@@ -12,14 +12,18 @@ import org.springframework.http.MediaType
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
 @Component
 class RateLimitFilter(
     private val redisTemplate: StringRedisTemplate,
     private val objectMapper: ObjectMapper,
-    @Value("\${rate-limit.chat.limit}") private val limit: Long,
-    @Value("\${rate-limit.chat.window-seconds}") private val windowSeconds: Long
+    @Value("\${rate-limit.chat.minute.limit}") private val minuteLimit: Long,
+    @Value("\${rate-limit.chat.hour.limit}") private val hourLimit: Long,
+    @Value("\${rate-limit.chat.daily.limit}") private val dailyLimit: Long,
 ) : OncePerRequestFilter() {
 
     companion object {
@@ -43,21 +47,38 @@ class RateLimitFilter(
                 return
             }
 
-        val key = "rate:chat:$userId"
-        val count = redisTemplate.opsForValue().increment(key) ?: 1L
-        if (count == 1L) {
-            redisTemplate.expire(key, windowSeconds, TimeUnit.SECONDS)
+        val minuteCount = incrementAndSetExpiry("rate:chat:$userId:1m", 60L)
+        val hourCount   = incrementAndSetExpiry("rate:chat:$userId:1h", 3600L)
+        val dailyCount  = incrementAndSetExpiry("rate:chat:$userId:daily", secondsUntilMidnight())
+
+        val exceededErrorCode = when {
+            minuteCount > minuteLimit -> ErrorCode.RATE_LIMIT_EXCEEDED_MINUTE
+            hourCount   > hourLimit   -> ErrorCode.RATE_LIMIT_EXCEEDED_HOUR
+            dailyCount  > dailyLimit  -> ErrorCode.RATE_LIMIT_EXCEEDED_DAILY
+            else                      -> null
         }
 
-        if (count > limit) {
-            val errorCode = ErrorCode.RATE_LIMIT_EXCEEDED
-            response.status = errorCode.httpStatus.value()
+        if (exceededErrorCode != null) {
+            response.status = exceededErrorCode.httpStatus.value()
             response.contentType = MediaType.APPLICATION_JSON_VALUE
             response.characterEncoding = "UTF-8"
-            objectMapper.writeValue(response.writer, ErrorResponse.of(errorCode))
+            objectMapper.writeValue(response.writer, ErrorResponse.of(exceededErrorCode))
             return
         }
 
         filterChain.doFilter(request, response)
+    }
+
+    private fun incrementAndSetExpiry(key: String, expireSeconds: Long): Long {
+        val count = redisTemplate.opsForValue().increment(key) ?: 1L
+        if (count == 1L) {
+            redisTemplate.expire(key, expireSeconds, TimeUnit.SECONDS)
+        }
+        return count
+    }
+
+    private fun secondsUntilMidnight(): Long {
+        val midnight = LocalDate.now().plusDays(1).atStartOfDay()
+        return ChronoUnit.SECONDS.between(LocalDateTime.now(), midnight)
     }
 }

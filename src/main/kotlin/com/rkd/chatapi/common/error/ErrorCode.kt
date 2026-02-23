@@ -29,5 +29,7 @@ enum class ErrorCode(
     CONVERSATION_ACCESS_DENIED("CONVERSATION0002", "해당 대화에 대한 접근 권한이 없습니다.", HttpStatus.FORBIDDEN),
 
     // rate limit
-    RATE_LIMIT_EXCEEDED("RATE0001", "요청 횟수 제한을 초과했습니다.", HttpStatus.TOO_MANY_REQUESTS),
+    RATE_LIMIT_EXCEEDED_MINUTE("RATE0001", "분당 요청 횟수 제한을 초과했습니다.", HttpStatus.TOO_MANY_REQUESTS),
+    RATE_LIMIT_EXCEEDED_HOUR("RATE0002", "시간당 요청 횟수 제한을 초과했습니다.", HttpStatus.TOO_MANY_REQUESTS),
+    RATE_LIMIT_EXCEEDED_DAILY("RATE0003", "일일 요청 횟수 제한을 초과했습니다.", HttpStatus.TOO_MANY_REQUESTS),
 }
