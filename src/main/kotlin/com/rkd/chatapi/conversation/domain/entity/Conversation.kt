@@ -14,6 +14,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
 
 @Entity
 class Conversation(
@@ -33,6 +34,15 @@ class Conversation(
     var title: String = title
         private set
 
+    @Column(name = "summary", columnDefinition = "TEXT")
+    var summary: String? = null
+        private set
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "last_summarized_message_id")
+    var lastSummarizedMessage: Message? = null
+        private set
+
     @OneToMany(mappedBy = "conversation", cascade = [CascadeType.ALL], orphanRemoval = true)
     var messages: MutableList<Message> = mutableListOf()
 
@@ -40,5 +50,10 @@ class Conversation(
         if (user.id != userId) {
             throw ConversationAccessDeniedException()
         }
+    }
+
+    fun updateSummary(summary: String, lastSummarizedMessage: Message) {
+        this.summary = summary
+        this.lastSummarizedMessage = lastSummarizedMessage
     }
 }
