@@ -11,4 +11,10 @@ interface MessageRepository : JpaRepository<Message, Long> {
 
     @Query("SELECT m FROM Message m WHERE m.conversation = :conversation AND m.id < :cursor ORDER BY m.createdAt DESC")
     fun findByConversationAndCursorOrderByCreatedAtDesc(conversation: Conversation, cursor: Long, pageable: Pageable): List<Message>
+
+    @Query("SELECT COUNT(m) FROM Message m WHERE m.conversation = :conversation AND m.id > :afterMessageId AND m.id < :beforeMessageId")
+    fun countByConversationAndIdBetween(conversation: Conversation, afterMessageId: Long, beforeMessageId: Long): Long
+
+    @Query("SELECT m FROM Message m WHERE m.conversation = :conversation AND m.id > :afterMessageId AND m.id < :beforeMessageId ORDER BY m.createdAt ASC")
+    fun findByConversationAndIdBetweenOrderByCreatedAtAsc(conversation: Conversation, afterMessageId: Long, beforeMessageId: Long): List<Message>
 }

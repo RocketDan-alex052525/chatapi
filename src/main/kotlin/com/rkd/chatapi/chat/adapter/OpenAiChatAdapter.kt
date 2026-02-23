@@ -5,14 +5,14 @@ import com.rkd.chatapi.chat.dto.request.OpenAiChatCompletionRequest
 import com.rkd.chatapi.chat.dto.response.OpenAiChatCompletionResponse
 import com.rkd.chatapi.chat.dto.response.OpenAiStreamChatCompletionResponse
 import com.rkd.chatapi.common.security.ApiKeyEncryptor
+import com.rkd.chatapi.message.domain.MessageRole
 import com.rkd.chatapi.user.domain.UserReader
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.io.ClassPathResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.client.SimpleClientHttpRequestFactory
-import org.springframework.http.codec.ServerSentEvent
-import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import org.springframework.web.reactive.function.client.WebClient
@@ -25,13 +25,16 @@ class OpenAiChatAdapter(
     @Value("\${openai.base-url}") private val baseUrl: String,
     @Value("\${openai.model}") private val model: String,
     @Value("\${openai.connect-timeout-ms}") private val connectTimeoutMs: Long,
-    @Value("\${openai.read-timeout-ms}") private val readTimeoutMs: Long
+    @Value("\${openai.read-timeout-ms}") private val readTimeoutMs: Long,
+    @Value("\${openai.summary-max-length}") private val summaryMaxLength: Int
 ) {
     companion object {
         const val STREAM_DONE_MARKER = "[DONE]"
     }
 
     private val objectMapper = jacksonObjectMapper()
+    private val summarizeInitialPrompt = loadPrompt("prompts/summarize-initial.txt")
+    private val summarizeIncrementalPrompt = loadPrompt("prompts/summarize-incremental.txt")
 
     fun completeChat(userId: Long, messages: List<OpenAiChatMessage>): String {
         val apiKey = decryptApiKey(userId)
@@ -90,6 +93,38 @@ class OpenAiChatAdapter(
                 chunk.choices.firstOrNull()?.delta?.content ?: ""
             }
             .filter { it.isNotEmpty() }
+    }
+
+    fun summarize(userId: Long, existingSummary: String?, messages: List<OpenAiChatMessage>): String {
+        val formattedMessages = messages.joinToString("\n") { "${it.role}: ${it.content}" }
+
+        val chatMessages = listOf(
+            OpenAiChatMessage(
+                role = MessageRole.SYSTEM.toOpenAiRole(),
+                content = buildSummarizationPrompt(existingSummary)
+            ),
+            OpenAiChatMessage(
+                role = MessageRole.USER.toOpenAiRole(),
+                content = formattedMessages
+            )
+        )
+
+        return completeChat(userId, chatMessages)
+    }
+
+    private fun buildSummarizationPrompt(existingSummary: String?): String {
+        return if (existingSummary != null) {
+            summarizeIncrementalPrompt
+                .replace("{existing_summary}", existingSummary)
+                .replace("{max_length}", summaryMaxLength.toString())
+        } else {
+            summarizeInitialPrompt
+                .replace("{max_length}", summaryMaxLength.toString())
+        }
+    }
+
+    private fun loadPrompt(path: String): String {
+        return ClassPathResource(path).inputStream.bufferedReader().readText()
     }
 
     private fun decryptApiKey(userId: Long): String {
