@@ -35,6 +35,11 @@ openai:
   summary-trigger-count: 5
   summary-max-length: 500
 
+rate-limit:
+  chat:
+    limit: 5
+    window-seconds: 60
+
 security:
   api-key-secret: ${API_KEY_SECRET}
   api-key-enc-secret: ${API_KEY_ENC_SECRET}
