@@ -17,4 +17,12 @@ class MessageReader(
     fun findMessagesByConversationWithCursor(conversation: Conversation, cursor: Long, pageable: Pageable): List<Message> {
         return messageRepository.findByConversationAndCursorOrderByCreatedAtDesc(conversation, cursor, pageable)
     }
+
+    fun countMessagesInRange(conversation: Conversation, afterMessageId: Long, beforeMessageId: Long): Long {
+        return messageRepository.countByConversationAndIdBetween(conversation, afterMessageId, beforeMessageId)
+    }
+
+    fun findMessagesInRange(conversation: Conversation, afterMessageId: Long, beforeMessageId: Long): List<Message> {
+        return messageRepository.findByConversationAndIdBetweenOrderByCreatedAtAsc(conversation, afterMessageId, beforeMessageId)
+    }
 }
