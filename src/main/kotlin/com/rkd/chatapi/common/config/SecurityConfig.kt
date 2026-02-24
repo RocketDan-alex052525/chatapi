@@ -2,6 +2,7 @@ package com.rkd.chatapi.common.config
 
 import com.rkd.chatapi.common.security.ApiKeyAuthFilter
 import com.rkd.chatapi.common.security.JwtAuthFilter
+import com.rkd.chatapi.common.security.RateLimitFilter
 import jakarta.servlet.DispatcherType
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -13,7 +14,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 class SecurityConfig(
     private val apiKeyAuthFilter: ApiKeyAuthFilter,
-    private val jwtAuthFilter: JwtAuthFilter
+    private val jwtAuthFilter: JwtAuthFilter,
+    private val rateLimitFilter: RateLimitFilter
 ) {
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -30,6 +32,7 @@ class SecurityConfig(
             }
             .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterAfter(rateLimitFilter, JwtAuthFilter::class.java)
             .build()
     }
 }
