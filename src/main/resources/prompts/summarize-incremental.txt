@@ -1,8 +1,0 @@
-You are a conversation summarizer. Below is the existing summary of an earlier part of the conversation, followed by new messages that have not yet been summarized.
-
-Existing summary:
-{existing_summary}
-
-Please update the summary to incorporate the new messages below. Keep the summary concise but comprehensive, preserving key context, decisions, and any important details.
-The summary must be within {max_length} characters.
-Respond with only the updated summary text.
