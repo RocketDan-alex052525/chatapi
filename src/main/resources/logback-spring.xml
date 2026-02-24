@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- %clr 사용을 위한 Spring Boot 전용 변환자 등록 -->
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+
+    <!--  로컬 전용 컬러 콘솔   -->
+    <appender name="CONSOLE_LOCAL" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%clr(%d{HH:mm:ss.SSS}){faint} %clr([%15.15t]){faint} %clr(%-5level) %clr(%logger{36}){cyan} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--  운영 전용 단색 콘솔   -->
+    <appender name="CONSOLE_PROD" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%15.15t] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--  로컬 프로파일        -->
+    <springProfile name="local">
+        <logger name="com.rkd.chatapi" level="DEBUG"/>
+        <logger name="org.springframework.web.servlet.DispatcherServlet" level="DEBUG"/>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_LOCAL"/>
+        </root>
+    </springProfile>
+
+    <!--  운영 프로파일        -->
+    <springProfile name="prod">
+        <logger name="com.rkd.chatapi" level="INFO"/>
+        <root level="WARN">
+            <appender-ref ref="CONSOLE_PROD"/>
+        </root>
+    </springProfile>
+
+</configuration>

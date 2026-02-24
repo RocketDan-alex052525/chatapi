@@ -1,6 +1,8 @@
 spring:
   application:
     name: chatapi
+  profiles:
+    active: local
 
   datasource:
     url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
