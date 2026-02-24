@@ -9,7 +9,6 @@ import com.rkd.chatapi.message.domain.MessageRole
 import com.rkd.chatapi.user.domain.UserReader
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.core.io.ClassPathResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.client.SimpleClientHttpRequestFactory
@@ -33,8 +32,6 @@ class OpenAiChatAdapter(
     }
 
     private val objectMapper = jacksonObjectMapper()
-    private val summarizeInitialPrompt = loadPrompt("prompts/summarize-initial.txt")
-    private val summarizeIncrementalPrompt = loadPrompt("prompts/summarize-incremental.txt")
 
     fun completeChat(userId: Long, messages: List<OpenAiChatMessage>): String {
         val apiKey = decryptApiKey(userId)
@@ -114,17 +111,15 @@ class OpenAiChatAdapter(
 
     private fun buildSummarizationPrompt(existingSummary: String?): String {
         return if (existingSummary != null) {
-            summarizeIncrementalPrompt
-                .replace("{existing_summary}", existingSummary)
-                .replace("{max_length}", summaryMaxLength.toString())
+            SummarizationPrompt.INCREMENTAL.render(
+                "existing_summary" to existingSummary,
+                "max_length" to summaryMaxLength.toString()
+            )
         } else {
-            summarizeInitialPrompt
-                .replace("{max_length}", summaryMaxLength.toString())
+            SummarizationPrompt.INITIAL.render(
+                "max_length" to summaryMaxLength.toString()
+            )
         }
-    }
-
-    private fun loadPrompt(path: String): String {
-        return ClassPathResource(path).inputStream.bufferedReader().readText()
     }
 
     private fun decryptApiKey(userId: Long): String {
