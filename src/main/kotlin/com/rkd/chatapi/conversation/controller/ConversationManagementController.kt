@@ -16,9 +16,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/conversations")
 class ConversationManagementController(
     private val conversationManagementService: ConversationManagementService
-) {
-    @PostMapping
-    fun createConversation(
+) : ConversationManagementApi {
+    override fun createConversation(
         @RequestBody conversationCreateRequest: ConversationCreateRequest,
         @LoginUser userId: Long
     ): ResponseEntity<ConversationCreateResponse> {
@@ -26,8 +25,7 @@ class ConversationManagementController(
         return ResponseEntity.ok(conversationCreateResponse)
     }
 
-    @DeleteMapping("/{conversationId}")
-    fun deleteConversation(
+    override fun deleteConversation(
         @LoginUser userId: Long,
         @PathVariable conversationId: Long
     ): ResponseEntity<Void> {

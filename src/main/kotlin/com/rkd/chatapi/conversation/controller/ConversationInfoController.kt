@@ -15,9 +15,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/conversations")
 class ConversationInfoController(
     private val conversationInfoService: ConversationInfoService
-) {
-    @GetMapping
-    fun getConversations(
+) : ConversationInfoApi {
+    override fun getConversations(
         @LoginUser userId: Long,
         @RequestParam(required = false) cursor: Long?,
         @RequestParam(defaultValue = "5") size: Int
@@ -26,8 +25,7 @@ class ConversationInfoController(
         return ResponseEntity.ok(conversationsGetResponse)
     }
 
-    @GetMapping("/{conversationId}/messages")
-    fun getConversationWithMessages(
+    override fun getConversationWithMessages(
         @LoginUser userId: Long,
         @PathVariable conversationId: Long,
         @RequestParam(required = false) cursor: Long?,
