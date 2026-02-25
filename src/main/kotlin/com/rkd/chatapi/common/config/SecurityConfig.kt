@@ -7,9 +7,11 @@ import jakarta.servlet.DispatcherType
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.security.web.util.matcher.DispatcherTypeRequestMatcher
 
 @Configuration
 class SecurityConfig(
@@ -19,20 +21,24 @@ class SecurityConfig(
 ) {
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        return http
-            .csrf { it.disable() }
-            .formLogin { it.disable() }
-            .httpBasic { it.disable() }
-            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
-            .authorizeHttpRequests {
-                it.dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
-                it.requestMatchers("/api/auth/**").permitAll()
-                it.requestMatchers("/api/**").authenticated()
-                it.anyRequest().permitAll()
+        http {
+            csrf { disable() }
+            formLogin { disable() }
+            httpBasic { disable() }
+            sessionManagement {
+                sessionCreationPolicy = SessionCreationPolicy.STATELESS
             }
-            .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
-            .addFilterAfter(rateLimitFilter, JwtAuthFilter::class.java)
-            .build()
+            authorizeHttpRequests {
+                authorize(DispatcherTypeRequestMatcher(DispatcherType.ASYNC), permitAll)
+                authorize("/api/auth/**", permitAll)
+                authorize("/management/health", permitAll)
+                authorize("/api/**", authenticated)
+                authorize(anyRequest, permitAll)
+            }
+            addFilterBefore<UsernamePasswordAuthenticationFilter>(apiKeyAuthFilter)
+            addFilterBefore<UsernamePasswordAuthenticationFilter>(jwtAuthFilter)
+            addFilterAfter<JwtAuthFilter>(rateLimitFilter)
+        }
+        return http.build()
     }
 }
