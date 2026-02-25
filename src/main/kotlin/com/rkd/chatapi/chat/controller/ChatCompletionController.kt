@@ -19,9 +19,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 class ChatCompletionController(
     private val chatCompletionService: ChatCompletionService,
     @Value("\${openai.stream-timeout-ms}") private val streamTimeoutMs: Long
-) {
-    @PostMapping("/completions")
-    fun createCompletion(
+) : ChatCompletionApi {
+    override fun createCompletion(
         @RequestBody request: ChatCompletionRequest,
         @LoginUser userId: Long
     ): ResponseEntity<ChatCompletionResponse> {
@@ -30,7 +29,7 @@ class ChatCompletionController(
     }
 
     @PostMapping("/completions/stream", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-    fun createCompletionStream(
+    override fun createCompletionStream(
         @RequestBody request: ChatCompletionRequest,
         @LoginUser userId: Long
     ): SseEmitter {

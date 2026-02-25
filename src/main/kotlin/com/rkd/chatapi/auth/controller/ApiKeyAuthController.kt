@@ -20,16 +20,14 @@ class ApiKeyAuthController(
     private val apiKeyManagementService: ApiKeyManagementService,
     private val apiKeyLoginService: ApiKeyLoginService,
     private val cookieUtil: CookieUtil
-) {
+) : ApiKeyAuthApi {
 
-    @PostMapping("/apiKey")
-    fun registerApiKey(@RequestHeader(API_KEY_HEADER) apiKey: String): ResponseEntity<ApiKeyRegisterResponse> {
+    override fun registerApiKey(@RequestHeader(API_KEY_HEADER) apiKey: String): ResponseEntity<ApiKeyRegisterResponse> {
         val registerApiKeyResponse = apiKeyManagementService.registerApiKey(apiKey)
         return ResponseEntity.ok(registerApiKeyResponse)
     }
 
-    @GetMapping("/login")
-    fun login(@RequestHeader(API_KEY_HEADER) apiKey: String): ResponseEntity<LoginResponse> {
+    override fun login(@RequestHeader(API_KEY_HEADER) apiKey: String): ResponseEntity<LoginResponse> {
         val loginResponse = apiKeyLoginService.login(apiKey)
         val cookie = cookieUtil.createAccessTokenCookie(token = loginResponse.accessToken)
         return ResponseEntity.ok()
