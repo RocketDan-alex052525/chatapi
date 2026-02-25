@@ -1,6 +1,8 @@
 spring:
   application:
     name: chatapi
+  profiles:
+    active: local
 
   datasource:
     url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
@@ -17,6 +19,15 @@ spring:
     redis:
       host: localhost
       port: 6379
+
+management:
+  endpoints:
+    web:
+      base-path: /management
+      exposure:
+        include: health
+      path-mapping:
+        health: health
 
 springdoc:
   api-docs:
