@@ -96,5 +96,21 @@ docker-compose up -d
 ## 테스트
 
 ```bash
+# 전체 테스트 실행
 ./gradlew test
+
+# 특정 클래스
+./gradlew test --tests "com.rkd.chatapi.chat.service.ChatCompletionServiceTest"
+
+# 특정 메서드
+./gradlew test --tests "com.rkd.chatapi.chat.service.ChatCompletionServiceTest.methodName"
 ```
+
+### 커버리지
+
+```bash
+# 테스트 실행 + 커버리지 리포트 생성
+./gradlew test jacocoTestReport
+```
+
+리포트 위치: `build/reports/jacoco/test/html/index.html`
