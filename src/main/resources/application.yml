@@ -44,7 +44,7 @@ openai:
   stream-timeout-ms: 60000
   history-limit: 10
   summary-trigger-count: 5
-  summary-max-length: 500
+  summary-max-length: 10000
 
 rate-limit:
   chat:
