@@ -57,6 +57,13 @@ tasks.withType<Test> {
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude("com/rkd/chatapi/common/**")
+            }
+        })
+    )
     reports {
         html.required = true
     }
