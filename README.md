@@ -95,6 +95,12 @@ docker-compose up -d
 
 ## 테스트
 
+| 종류 | 대상 |
+|------|------|
+| Service 단위 테스트 | Mockito 기반 |
+| Repository 테스트 | `@DataJpaTest` + H2 |
+| Controller 테스트 | `@WebMvcTest` + MockMvc |
+
 ```bash
 # 전체 테스트 실행
 ./gradlew test
