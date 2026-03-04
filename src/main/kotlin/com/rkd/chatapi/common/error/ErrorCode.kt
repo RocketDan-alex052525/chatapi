@@ -27,6 +27,7 @@ enum class ErrorCode(
     // conversation
     CONVERSATION_NOT_FOUND("CONVERSATION0001", "대화를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
     CONVERSATION_ACCESS_DENIED("CONVERSATION0002", "해당 대화에 대한 접근 권한이 없습니다.", HttpStatus.FORBIDDEN),
+    CONVERSATION_BUSY("CONVERSATION0003", "이미 처리 중인 요청이 있습니다. 잠시 후 다시 시도해주세요.", HttpStatus.CONFLICT),
 
     // rate limit
     RATE_LIMIT_EXCEEDED_MINUTE("RATE0001", "분당 요청 횟수 제한을 초과했습니다.", HttpStatus.TOO_MANY_REQUESTS),
