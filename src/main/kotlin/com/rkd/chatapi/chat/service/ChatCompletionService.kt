@@ -2,6 +2,7 @@ package com.rkd.chatapi.chat.service
 
 import com.rkd.chatapi.conversation.domain.ConversationReader
 import com.rkd.chatapi.conversation.domain.ConversationWriter
+import com.rkd.chatapi.conversation.lock.ConversationLockManager
 import com.rkd.chatapi.message.domain.MessageReader
 import com.rkd.chatapi.message.domain.MessageWriter
 import com.rkd.chatapi.message.domain.MessageRole
@@ -25,25 +26,29 @@ class ChatCompletionService(
     private val messageReader: MessageReader,
     private val messageWriter: MessageWriter,
     private val openAiChatAdapter: OpenAiChatAdapter,
+    private val conversationLockManager: ConversationLockManager,
     @Value("\${openai.history-limit}") private val historyLimit: Int,
     @Value("\${openai.summary-trigger-count}") private val summaryTriggerCount: Int
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun completeChat(userId: Long, request: ChatCompletionRequest): ChatCompletionResponse {
-        val (conversation, allMessages) = prepareChat(request)
+        return conversationLockManager.withLock(request.conversationId) {
+            val (conversation, allMessages) = prepareChat(request)
 
-        val answer = openAiChatAdapter.completeChat(userId, allMessages)
-        val savedAssistant = saveAssistantMessage(conversation, answer)
-        trySummarize(userId, conversation)
+            val answer = openAiChatAdapter.completeChat(userId, allMessages)
+            val savedAssistant = saveAssistantMessage(conversation, answer)
+            trySummarize(userId, conversation)
 
-        return ChatCompletionResponse(
-            messageId = savedAssistant.id!!,
-            answer = answer
-        )
+            ChatCompletionResponse(
+                messageId = savedAssistant.id!!,
+                answer = answer
+            )
+        }
     }
 
     fun completeChatStream(userId: Long, request: ChatCompletionRequest): Flux<ChatStreamChunk> {
+        val lockToken = conversationLockManager.tryAcquire(request.conversationId)
         val (conversation, allMessages) = prepareChat(request)
         val contentBuffer = StringBuilder()
 
@@ -53,6 +58,10 @@ class ChatCompletionService(
             .doOnComplete {
                 saveAssistantMessage(conversation, contentBuffer.toString())
                 trySummarize(userId, conversation)
+                conversationLockManager.releaseLock(lockToken)
+            }
+            .doOnError {
+                conversationLockManager.releaseLock(lockToken)
             }
     }
 
