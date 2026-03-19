@@ -10,7 +10,9 @@ import com.rkd.chatapi.message.dto.response.MessageInfoResponse
 import com.rkd.chatapi.message.dto.response.MessageListResponse
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
+@Transactional(readOnly = true)
 @Service
 class ConversationInfoService(
     private val messageReader: MessageReader,
